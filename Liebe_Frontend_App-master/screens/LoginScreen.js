@@ -61,7 +61,7 @@ const LoginScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => navigation.navigate("Gender")}
+          onPress={() => navigation.navigate("Profile")}
         >
           <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
         </TouchableOpacity>

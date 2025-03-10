@@ -8,14 +8,15 @@ import GenderScreen from "./screens/GenderScreen";
 import InterestsScreen from "./screens/InterestsScreen";
 import ProfilePictureScreen from "./screens/ProfilePictureScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import MatchScreen from "./screens/MatchScreen";
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
-    <RegisterProvider> {/* Envuelve todo dentro del contexto */}
+    <RegisterProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Register">
+        <Stack.Navigator initialRouteName="Match">
           <Stack.Screen
             name="Login"
             component={LoginScreen}
@@ -44,6 +45,11 @@ const App = () => {
           <Stack.Screen
             name="Profile"
             component={ProfileScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Match"
+            component={MatchScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

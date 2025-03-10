@@ -34,11 +34,13 @@ const styles = StyleSheet.create({
   navBar: {
     position: "absolute",
     top: 0,
-    width: "100%",
-    height: "10%",
+    left: 0, // Asegura que comience desde el borde izquierdo
+    right: 0, // Asegura que termine en el borde derecho
+    width: "100%", // Ocupa todo el ancho
+    height: 80, // Altura fija para la barra de navegación
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start", // Alinea a la derecha
+    justifyContent: "flex-start", // Alinea a la izquierda
     backgroundColor: "#E82561",
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
@@ -57,5 +59,4 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
 });
-
 export default CustomNavBar;

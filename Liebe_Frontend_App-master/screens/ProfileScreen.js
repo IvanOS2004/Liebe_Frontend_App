@@ -1,231 +1,250 @@
-// ProfileScreen.js [MODIFICADO]
 import React, { useState } from "react";
 import {
+  SafeAreaView,
+  ScrollView,
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Image,
-  ScrollView,
-  TextInput,
+  TouchableOpacity,
 } from "react-native";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
-import { useRegisterContext } from "../context/RegisterContext";
 
 const ProfileScreen = ({ navigation }) => {
-  const { registerData, setRegisterData } = useRegisterContext();
+  // Datos de ejemplo
+  const profileData = {
+    name: "Juan Pérez",
+    age: 28,
+    gender: "Hombre",
+    description:
+      "Amante de los viajes, la música y el deporte. Siempre buscando nuevas aventuras y experiencias.",
+    interests: ["Viajes", "Música", "Deportes", "Cine", "Tecnología"],
+    photos: [
+      "https://via.placeholder.com/400", // URL de imagen de ejemplo
+    ],
+  };
 
-  // Estados locales para editar nombre, edad y descripción
-  const [name, setName] = useState(registerData.name || "");
-  const [age, setAge] = useState(
-    registerData.age ? registerData.age.toString() : ""
-  );
-  const [description, setDescription] = useState(registerData.description || "");
+  const { name, age, gender, description, interests, photos } = profileData;
 
-  // Si hay imagen en el contexto, se usa la primera (base64)
-  const profileImageBase64 =
-    registerData.photos && registerData.photos.length > 0
-      ? registerData.photos[0]
-      : null;
-  // Transformación aplicada en el recorte
-  const crop = registerData.crop || { translationX: 0, translationY: 0, scale: 1 };
+  // Estado para controlar si se muestra el botón de editar
+  const [isEditingImage, setIsEditingImage] = useState(false);
 
-  const handleSaveProfile = async () => {
-    // Crear objeto con toda la información actualizada del perfil
-    const updatedProfile = {
-      ...registerData,
-      name,                              
-      age: parseInt(age),
-      description,
-    };
-
-    // Actualizamos el contexto (opcional, para mantenerlo actualizado en el front)
-    setRegisterData(updatedProfile);
-
-    try {
-      const response = await fetch("http://192.168.1.102:3000/update-profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedProfile),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        alert("Perfil actualizado correctamente en la base de datos");
-      } else {
-        alert("Error al actualizar perfil: " + result.message);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error de conexión al actualizar perfil");
-    }
+  // Función para manejar el clic en la imagen
+  const handleImagePress = () => {
+    setIsEditingImage(!isEditingImage);
   };
 
   return (
-    <View style={styles.container}>
-      <CustomNavBar />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Tu Perfil</Text>
+    <SafeAreaView style={styles.safeContainer}>
+      <View style={styles.container}>
+        <CustomNavBar />
 
-        {/* Foto de perfil con recorte aplicado */}
-        <View style={styles.profileImageContainer}>
-          {profileImageBase64 ? (
-            <Image
-              source={{
-                uri: `data:image/jpeg;base64,${profileImageBase64}`,
-              }}
-              style={[
-                styles.profileImage,
-                {
-                  transform: [
-                    { translateX: crop.translationX },
-                    { translateY: crop.translationY },
-                    { scale: crop.scale },
-                  ],
-                },
-              ]}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text>Sin imagen</Text>
-            </View>
-          )}
+        {/* Contenedor con scroll */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Foto de perfil */}
+          <TouchableOpacity
+            style={styles.profileImageContainer}
+            onPress={handleImagePress}
+            activeOpacity={0.8} // Opacidad al hacer clic
+          >
+            {photos?.length > 0 ? (
+              <View>
+                <Image
+                  source={{ uri: photos[0] }}
+                  style={[
+                    styles.profileImage,
+                    isEditingImage && styles.imageOpacity, // Aplicar opacidad si está en modo edición
+                  ]}
+                  resizeMode="cover"
+                />
+                {isEditingImage && (
+                  <View style={styles.editButtonOverlay}>
+                    <Text style={styles.editButtonText}>Editar Foto</Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>Sin imagen</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Información básica */}
+          <View style={styles.basicInfoContainer}>
+            <Text style={styles.nameText}>{name}</Text>
+            <Text style={styles.ageGenderText}>
+              {age} años · {gender}
+            </Text>
+          </View>
+
+          {/* Descripción */}
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.descriptionText}>{description}</Text>
+          </View>
+
+          {/* Gustos (etiquetas) */}
+          <View style={styles.interestsContainer}>
+            {interests.map((interest, index) => (
+              <View key={index} style={styles.interestChip}>
+                <Text style={styles.interestText}>{interest}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Botón de editar */}
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => navigation.navigate("EditProfile")} // Navegar a la pantalla de edición
+          >
+            <Text style={styles.saveButtonText}>Editar Perfil</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Barra de navegación inferior */}
+        <View style={styles.bottomNavBar}>
+          <BottomNavBar navigation={navigation} />
         </View>
-
-        {/* Información del usuario */}
-        <View style={styles.profileCard}>
-          {/* Campo para ingresar el nombre de usuario */}
-          <TextInput
-            style={styles.usernameInput}
-            placeholder="Ingresa nombre de usuario"
-            value={name}
-            onChangeText={setName}
-          />
-          {/* Mostrar el email debajo del nombre */}
-          <Text style={styles.emailText}>
-            {registerData.email || "Correo electrónico"}
-          </Text>
-
-          <Text style={styles.profileInfo}>
-            Edad: {age ? age : "No especificado"}
-          </Text>
-          <Text style={styles.profileInfo}>
-            Ubicación: {registerData.location || "Ciudad Ejemplo"}
-          </Text>
-        </View>
-
-        {/* Campos editables para Edad y Descripción */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Edad:</Text>
-          <TextInput
-            style={styles.input}
-            value={age}
-            onChangeText={setAge}
-            keyboardType="numeric"
-            placeholder="Ingresa tu edad"
-          />
-          <Text style={styles.inputLabel}>Descripción:</Text>
-          <TextInput
-            style={[styles.input, { height: 100 }]}
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            placeholder="Cuéntanos sobre ti"
-          />
-        </View>
-
-        {/* Mostrar Género e Intereses */}
-        <View style={styles.profileCard}>
-          <Text style={styles.profileInfo}>
-            Género: {registerData.gender || "No especificado"}
-          </Text>
-          <Text style={styles.profileInfo}>
-            Intereses:{" "}
-            {registerData.interests && registerData.interests.length > 0
-              ? registerData.interests.join(", ")
-              : "No especificados"}
-          </Text>
-        </View>
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
-          <Text style={styles.saveButtonText}>Guardar Perfil</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      <BottomNavBar navigation={navigation} />
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFE4CF" },
-  scrollContainer: { alignItems: "center", paddingBottom: 20, paddingTop: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginVertical: 20 },
-  profileImageContainer: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    overflow: "hidden",
-    borderWidth: 3,
-    borderColor: "#E82561",
-    marginBottom: 10,
-  },
-  profileImage: { width: "100%", height: "100%" },
-  placeholderImage: {
+  safeContainer: {
     flex: 1,
+    backgroundColor: "#FFE4CF",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#FFE4CF",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 80, // Espacio para la CustomNavBar
+    paddingBottom: 100, // Espacio para la BottomNavBar
+  },
+  profileImageContainer: {
+    width: "90%",
+    height: 350, // Altura grande para la foto
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ccc", // Fondo temporal
+    borderRadius: 20,
+    marginTop: 20,
+    overflow: "hidden",
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imageOpacity: {
+    opacity: 0.5, // Opacidad cuando está en modo edición
+  },
+  editButtonOverlay: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -50 }, { translateY: -12 }], // Centrar el botón
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#E82561",
+  },
+  placeholderImage: {
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ccc",
   },
-  profileCard: {
-    width: "90%",
-    padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+  placeholderText: {
+    fontSize: 18,
+    color: "#fff",
+  },
+  basicInfoContainer: {
+    marginTop: 20,
     alignItems: "center",
-    marginBottom: 20,
+    width: "90%",
   },
-  usernameInput: {
-    fontSize: 20,
+  nameText: {
+    fontSize: 28,
     fontWeight: "bold",
-    width: "100%",
+    color: "#E82561",
     textAlign: "center",
-    marginBottom: 5,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    paddingVertical: 5,
   },
-  emailText: {
+  ageGenderText: {
+    fontSize: 18,
+    color: "#666",
+    marginTop: 5,
+    textAlign: "center",
+  },
+  descriptionContainer: {
+    width: "90%",
+    marginTop: 20,
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: "#333",
+    textAlign: "center",
+  },
+  interestsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginTop: 20,
+    width: "90%",
+  },
+  interestChip: {
+    backgroundColor: "#E82561",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    margin: 5,
+  },
+  interestText: {
+    color: "#fff",
     fontSize: 14,
-    color: "#555",
-    marginBottom: 10,
-  },
-  profileInfo: { fontSize: 16, color: "#555", marginTop: 5 },
-  inputContainer: { width: "90%", marginBottom: 20 },
-  inputLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: "#fff",
-    marginBottom: 10,
   },
   saveButton: {
     backgroundColor: "#E82561",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    marginTop: 30,
     marginBottom: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   saveButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+  },
+  bottomNavBar: {
+    width: "100%",
+    height: 60,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });
 
