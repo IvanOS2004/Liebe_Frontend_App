@@ -39,8 +39,6 @@ const ProfileScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.container}>
         <CustomNavBar />
-
-        {/* Contenedor con scroll */}
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -127,15 +125,15 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     alignItems: "center",
-    paddingTop: 80, // Espacio para la CustomNavBar
-    paddingBottom: 100, // Espacio para la BottomNavBar
+    paddingTop: 80,
+    paddingBottom: 100,
   },
   profileImageContainer: {
     width: "90%",
-    height: 350, // Altura grande para la foto
+    height: 350,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ccc", // Fondo temporal
+    backgroundColor: "#ccc",
     borderRadius: 20,
     marginTop: 20,
     overflow: "hidden",
@@ -145,13 +143,13 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   imageOpacity: {
-    opacity: 0.5, // Opacidad cuando está en modo edición
+    opacity: 0.5,
   },
   editButtonOverlay: {
     position: "absolute",
     top: "50%",
     left: "50%",
-    transform: [{ translateX: -50 }, { translateY: -12 }], // Centrar el botón
+    transform: [{ translateX: -50 }, { translateY: -12 }],
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     paddingVertical: 10,
     paddingHorizontal: 20,
