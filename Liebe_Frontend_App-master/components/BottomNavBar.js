@@ -35,7 +35,7 @@ const BottomNavBar = ({ navigation }) => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => navigation.navigate("Profile")}
+        onPress={() => navigation.navigate("Matches")}
       >
         <Text style={styles.navText}>Matches</Text>
       </TouchableOpacity>

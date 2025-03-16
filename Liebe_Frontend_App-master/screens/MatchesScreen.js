@@ -11,68 +11,79 @@ import {
 } from "react-native";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
+import { Ionicons } from "@expo/vector-icons"; // Para los íconos de los botones
 
 const { height } = Dimensions.get("window"); // Obtiene la altura de la pantalla
 
-const chats = [
+const matches = [
   {
     id: "1",
     name: "Ana López",
-    message: "Hola, ¿cómo estás?",
+    age: 25,
+    location: "Madrid, España",
     avatar: "https://randomuser.me/api/portraits/women/1.jpg",
   },
   {
     id: "2",
     name: "Carlos Pérez",
-    message: "¿Nos vemos mañana?",
+    age: 28,
+    location: "Barcelona, España",
     avatar: "https://randomuser.me/api/portraits/men/2.jpg",
   },
   {
     id: "3",
     name: "Sofía Gómez",
-    message: "¡Te mando la info ahora!",
+    age: 22,
+    location: "Valencia, España",
     avatar: "https://randomuser.me/api/portraits/women/3.jpg",
   },
   {
     id: "4",
     name: "Juan Torres",
-    message: "Listo para el proyecto",
+    age: 30,
+    location: "Sevilla, España",
     avatar: "https://randomuser.me/api/portraits/men/4.jpg",
   },
   {
     id: "5",
     name: "María Sánchez",
-    message: "Nos vemos en la oficina",
+    age: 27,
+    location: "Zaragoza, España",
     avatar: "https://randomuser.me/api/portraits/women/5.jpg",
   },
   {
     id: "6",
     name: "Luis Herrera",
-    message: "Ya revisé el documento",
+    age: 26,
+    location: "Málaga, España",
     avatar: "https://randomuser.me/api/portraits/men/6.jpg",
   },
   {
     id: "7",
     name: "Pedro Ramírez",
-    message: "Confirmo la cita",
+    age: 29,
+    location: "Murcia, España",
     avatar: "https://randomuser.me/api/portraits/men/7.jpg",
   },
   {
     id: "8",
     name: "Elena Flores",
-    message: "Buen día!",
+    age: 24,
+    location: "Palma, España",
     avatar: "https://randomuser.me/api/portraits/women/8.jpg",
   },
   {
     id: "9",
     name: "Fernando Ríos",
-    message: "Estoy en camino",
+    age: 31,
+    location: "Bilbao, España",
     avatar: "https://randomuser.me/api/portraits/men/9.jpg",
   },
   {
     id: "10",
     name: "Natalia Vega",
-    message: "Nos vemos pronto",
+    age: 23,
+    location: "Alicante, España",
     avatar: "https://randomuser.me/api/portraits/women/10.jpg",
   },
 ];
@@ -93,7 +104,7 @@ const ChatScreen = ({ navigation }) => {
         <CustomNavBar />
       </View>
 
-      {/* Contenedor de chats con scroll */}
+      {/* Contenedor de perfiles con scroll */}
       <View
         style={[
           styles.chatContainer,
@@ -108,14 +119,27 @@ const ChatScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {chats.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.chatItem}>
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              <View style={styles.chatInfo}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.message}>{item.message}</Text>
+          {matches.map((item) => (
+            <View key={item.id} style={styles.profileItem}>
+              <Image
+                source={{ uri: item.avatar }}
+                style={styles.profileAvatar}
+              />
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {item.name}, {item.age}
+                </Text>
+                <Text style={styles.profileLocation}>{item.location}</Text>
               </View>
-            </TouchableOpacity>
+              <View style={styles.profileActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Ionicons name="close" size={24} color="#FF5864" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Ionicons name="heart" size={24} color="#4CAF50" />
+                </TouchableOpacity>
+              </View>
+            </View>
           ))}
         </ScrollView>
       </View>
@@ -167,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingBottom: 5, // Espaciado extra para evitar que el último mensaje se oculte
   },
-  chatItem: {
+  profileItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
@@ -180,22 +204,30 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  avatar: {
+  profileAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
-  chatInfo: {
+  profileInfo: {
     marginLeft: 15,
     flex: 1,
   },
-  name: {
+  profileName: {
     fontSize: 18,
     fontWeight: "bold",
   },
-  message: {
+  profileLocation: {
     fontSize: 14,
     color: "#666",
+  },
+  profileActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionButton: {
+    marginLeft: 10,
+    padding: 10,
   },
 });
 
