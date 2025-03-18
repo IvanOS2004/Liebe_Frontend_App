@@ -11,6 +11,7 @@ import ProfileScreen from "./screens/ProfileScreen";
 import MatchScreen from "./screens/MatchScreen";
 import ChatScreen from "./screens/ChatScreen";
 import MatchesScreen from "./screens/MatchesScreen";
+import ChatRoomScreen from "./screens/ChatRoomScreen";
 
 const Stack = createStackNavigator();
 
@@ -18,7 +19,7 @@ const App = () => {
   return (
     <RegisterProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Matches">
+        <Stack.Navigator initialRouteName="Chat">
           <Stack.Screen
             name="Login"
             component={LoginScreen}
@@ -62,6 +63,11 @@ const App = () => {
           <Stack.Screen
             name="Matches"
             component={MatchesScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChatRoom"
+            component={ChatRoomScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

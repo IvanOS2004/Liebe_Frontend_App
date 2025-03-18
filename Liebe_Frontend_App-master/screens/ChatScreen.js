@@ -109,7 +109,16 @@ const ChatScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         >
           {chats.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.chatItem}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.chatItem}
+              onPress={() =>
+                navigation.navigate("ChatRoom", {
+                  chatId: item.id,
+                  chatName: item.name,
+                })
+              }
+            >
               <Image source={{ uri: item.avatar }} style={styles.avatar} />
               <View style={styles.chatInfo}>
                 <Text style={styles.name}>{item.name}</Text>
