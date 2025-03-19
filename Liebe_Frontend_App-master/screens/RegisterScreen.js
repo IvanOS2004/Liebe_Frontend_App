@@ -1,6 +1,13 @@
 // RegisterScreen.js
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image } from "react-native"; // [MODIFICADO]
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native"; // [MODIFICADO]
 import CustomNavBar from "../components/CustomNavBar";
 import { useRegisterContext } from "../context/RegisterContext"; // [MODIFICADO]
 
@@ -70,7 +77,8 @@ const RegisterScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={handleRegister}>
+          onPress={() => navigation.navigate("FormProfile")}
+        >
           <Text style={styles.registerButtonText}>Registrarse</Text>
         </TouchableOpacity>
 

@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     width: "90%",
-    height: "70%",
+    height: "67%",
     borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#fff",

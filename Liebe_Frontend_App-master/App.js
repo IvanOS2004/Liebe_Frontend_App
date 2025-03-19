@@ -4,6 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { RegisterProvider } from "./context/RegisterContext"; // Importa el contexto
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
+import ProfileFormScreen from "./screens/FormProfileScreen";
 import GenderScreen from "./screens/GenderScreen";
 import InterestsScreen from "./screens/InterestsScreen";
 import ProfilePictureScreen from "./screens/ProfilePictureScreen";
@@ -19,7 +20,7 @@ const App = () => {
   return (
     <RegisterProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Chat">
+        <Stack.Navigator initialRouteName="Profile">
           <Stack.Screen
             name="Login"
             component={LoginScreen}
@@ -28,6 +29,11 @@ const App = () => {
           <Stack.Screen
             name="Register"
             component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="FormProfile"
+            component={ProfileFormScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen

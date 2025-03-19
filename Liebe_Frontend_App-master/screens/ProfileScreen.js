@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
@@ -25,14 +28,66 @@ const ProfileScreen = ({ navigation }) => {
     ],
   };
 
-  const { name, age, gender, description, interests, photos } = profileData;
+  const {
+    name: initialName,
+    age: initialAge,
+    gender: initialGender,
+    description: initialDescription,
+    interests: initialInterests,
+    photos,
+  } = profileData;
+
+  // Estados para el modal y los datos del formulario
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [name, setName] = useState(initialName);
+  const [age, setAge] = useState(initialAge.toString());
+  const [gender, setGender] = useState(initialGender);
+  const [selectedInterests, setSelectedInterests] = useState(initialInterests);
+  const [description, setDescription] = useState(initialDescription);
 
   // Estado para controlar si se muestra el botón de editar
   const [isEditingImage, setIsEditingImage] = useState(false);
 
-  // Función para manejar el clic en la imagen
-  const handleImagePress = () => {
-    setIsEditingImage(!isEditingImage);
+  // Lista de gustos predefinidos
+  const predefinedInterests = [
+    "Viajes",
+    "Música",
+    "Deportes",
+    "Cine",
+    "Tecnología",
+    "Arte",
+    "Lectura",
+  ];
+
+  // Opciones de género
+  const genderOptions = ["Hombre", "Mujer", "Otro"];
+
+  // Función para manejar la selección de gustos
+  const toggleInterest = (interest) => {
+    if (selectedInterests.includes(interest)) {
+      setSelectedInterests(
+        selectedInterests.filter((item) => item !== interest)
+      );
+    } else {
+      setSelectedInterests([...selectedInterests, interest]);
+    }
+  };
+
+  // Función para guardar los cambios del formulario
+  const handleSave = () => {
+    if (!name || !age || !description) {
+      Alert.alert("Error", "Por favor, completa todos los campos.");
+      return;
+    }
+
+    if (description.split(" ").length > 50) {
+      Alert.alert("Error", "La descripción no debe exceder las 50 palabras.");
+      return;
+    }
+
+    // Aquí puedes guardar los datos o enviarlos a una API
+    Alert.alert("Éxito", "Tu perfil ha sido actualizado.");
+    setIsModalVisible(false); // Cierra el modal después de guardar
   };
 
   return (
@@ -47,7 +102,7 @@ const ProfileScreen = ({ navigation }) => {
           {/* Foto de perfil */}
           <TouchableOpacity
             style={styles.profileImageContainer}
-            onPress={handleImagePress}
+            onPress={() => setIsEditingImage(!isEditingImage)}
             activeOpacity={0.8} // Opacidad al hacer clic
           >
             {photos?.length > 0 ? (
@@ -88,7 +143,7 @@ const ProfileScreen = ({ navigation }) => {
 
           {/* Gustos (etiquetas) */}
           <View style={styles.interestsContainer}>
-            {interests.map((interest, index) => (
+            {selectedInterests.map((interest, index) => (
               <View key={index} style={styles.interestChip}>
                 <Text style={styles.interestText}>{interest}</Text>
               </View>
@@ -98,11 +153,110 @@ const ProfileScreen = ({ navigation }) => {
           {/* Botón de editar */}
           <TouchableOpacity
             style={styles.saveButton}
-            onPress={() => navigation.navigate("EditProfile")} // Navegar a la pantalla de edición
+            onPress={() => setIsModalVisible(true)} // Abrir el modal
           >
             <Text style={styles.saveButtonText}>Editar Perfil</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Modal para editar el perfil */}
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={false}
+        >
+          <ScrollView contentContainerStyle={styles.modalContainer}>
+            <CustomNavBar />
+            <Text style={styles.modalTitle}>Editar Perfil</Text>
+
+            {/* Campo para el nombre */}
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              value={name}
+              onChangeText={setName}
+            />
+
+            {/* Campo para la edad */}
+            <TextInput
+              style={styles.input}
+              placeholder="Edad"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="numeric"
+            />
+
+            {/* Selector de género personalizado */}
+            <View style={styles.genderSelectorContainer}>
+              {genderOptions.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.genderOption,
+                    gender === option && styles.selectedGenderOption,
+                  ]}
+                  onPress={() => setGender(option)}
+                >
+                  <Text
+                    style={[
+                      styles.genderOptionText,
+                      gender === option && styles.selectedGenderOptionText,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Selector de gustos personalizado */}
+            <View style={styles.interestsSelectorContainer}>
+              {predefinedInterests.map((interest, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.interestOption,
+                    selectedInterests.includes(interest) &&
+                      styles.selectedInterestOption,
+                  ]}
+                  onPress={() => toggleInterest(interest)}
+                >
+                  <Text
+                    style={[
+                      styles.interestOptionText,
+                      selectedInterests.includes(interest) &&
+                        styles.selectedInterestOptionText,
+                    ]}
+                  >
+                    {interest}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Campo para la descripción */}
+            <TextInput
+              style={[styles.input, styles.descriptionInput]}
+              placeholder="Descripción (máximo 50 palabras)"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
+
+            {/* Botón para guardar cambios */}
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+            </TouchableOpacity>
+
+            {/* Botón para cancelar */}
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setIsModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </Modal>
 
         {/* Barra de navegación inferior */}
         <View style={styles.bottomNavBar}>
@@ -215,6 +369,59 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
   },
+  genderSelectorContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 10,
+    width: "100%",
+  },
+  genderOption: {
+    flex: 1,
+    padding: 15,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#E82561",
+    borderRadius: 10,
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  selectedGenderOption: {
+    backgroundColor: "#E82561",
+    borderColor: "#E82561",
+  },
+  genderOptionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  selectedGenderOptionText: {
+    color: "#fff",
+  },
+  interestsSelectorContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginTop: 20,
+    width: "100%",
+  },
+  interestOption: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    margin: 5,
+    borderWidth: 1,
+    borderColor: "#E82561",
+  },
+  selectedInterestOption: {
+    backgroundColor: "#E82561",
+  },
+  interestOptionText: {
+    color: "#333",
+    fontSize: 14,
+  },
+  selectedInterestOptionText: {
+    color: "#fff",
+  },
   saveButton: {
     backgroundColor: "#E82561",
     paddingVertical: 15,
@@ -231,6 +438,46 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: "#fff",
     fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalContainer: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: "#FFE4CF",
+    alignItems: "center",
+  },
+  modalTitle: {
+    paddingTop: "20%",
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#E82561",
+  },
+  input: {
+    width: "100%",
+    padding: 15,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    fontSize: 16,
+  },
+  descriptionInput: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  cancelButton: {
+    marginTop: 10,
+    backgroundColor: "#ccc",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+  },
+  cancelButtonText: {
+    fontSize: 18,
+    color: "#000",
     fontWeight: "bold",
   },
   bottomNavBar: {
