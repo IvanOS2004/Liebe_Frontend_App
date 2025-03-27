@@ -39,10 +39,11 @@ const MatchScreen = ({ navigation }) => {
       // Reinicia la posición y carga un nuevo perfil
       position.setValue({ x: 0, y: 0 });
       setProfile({
-        name: "Carlos Ruiz",
-        age: 30,
+        id: Date.now(), // Nuevo id único para el siguiente perfil
+        name: "Laura Martínez",
+        age: 28,
         description:
-          "Fanático del fútbol y la tecnología. Busco alguien con quien compartir buenos momentos.",
+          "Amante del arte y la música. Siempre buscando nuevas experiencias.",
         photo: "https://via.placeholder.com/400",
       });
     });

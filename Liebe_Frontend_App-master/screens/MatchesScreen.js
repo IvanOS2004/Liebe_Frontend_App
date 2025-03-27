@@ -21,11 +21,16 @@ const BOTTOM_NAV_HEIGHT = 60;
 const MARGIN = 40;
 
 const MatchesScreen = ({ navigation }) => {
-  const { matches } = useContext(MatchContext); // Obtener la lista de matches del contexto
+  const { matches, removeMatch } = useContext(MatchContext); // Obtener la lista de matches y la función removeMatch
 
   // Calculamos la altura disponible para el ScrollView
   const scrollViewHeight =
     height - NAVBAR_HEIGHT - BOTTOM_NAV_HEIGHT - 2 * MARGIN;
+
+  // Función para manejar la eliminación de un match
+  const handleRemoveMatch = (id) => {
+    removeMatch(id); // Llamar a la función removeMatch con el id del match a eliminar
+  };
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -63,7 +68,10 @@ const MatchesScreen = ({ navigation }) => {
                   <Text style={styles.profileLocation}>{item.location}</Text>
                 </View>
                 <View style={styles.profileActions}>
-                  <TouchableOpacity style={styles.actionButton}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleRemoveMatch(item.id)} // Eliminar el match al presionar el botón
+                  >
                     <Ionicons name="close" size={24} color="#FF5864" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionButton}>

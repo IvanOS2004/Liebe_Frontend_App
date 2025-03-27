@@ -1,3 +1,4 @@
+// MatchContext.js
 import React, { createContext, useState } from "react";
 
 // Crear el contexto
@@ -12,8 +13,13 @@ export const MatchProvider = ({ children }) => {
     setMatches((prevMatches) => [...prevMatches, profile]);
   };
 
+  // Función para eliminar un match
+  const removeMatch = (id) => {
+    setMatches((prevMatches) => prevMatches.filter((match) => match.id !== id));
+  };
+
   return (
-    <MatchContext.Provider value={{ matches, addMatch }}>
+    <MatchContext.Provider value={{ matches, addMatch, removeMatch }}>
       {children}
     </MatchContext.Provider>
   );
