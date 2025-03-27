@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,8 +11,11 @@ import {
 } from "react-native";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
+import { MatchContext } from "../utils/MatchContext";
 
 const MatchScreen = ({ navigation }) => {
+  const { addMatch } = useContext(MatchContext); // Obtener función para agregar match
+
   // Datos de ejemplo para el perfil
   const [profile, setProfile] = useState({
     name: "Ana López",
@@ -27,6 +30,8 @@ const MatchScreen = ({ navigation }) => {
 
   // Función para manejar el like
   const handleLike = () => {
+    addMatch(profile); // Agregar perfil a los matches
+
     Animated.spring(position, {
       toValue: { x: 500, y: 0 }, // Mueve la tarjeta hacia la derecha
       useNativeDriver: true,
