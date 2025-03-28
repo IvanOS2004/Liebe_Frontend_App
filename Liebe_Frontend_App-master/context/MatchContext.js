@@ -9,8 +9,12 @@ export const MatchProvider = ({ children }) => {
     setMatches(prev => [...prev, newMatch]);
   };
 
+  const removeMatch = (matchId) => {
+    setMatches((prev) => prev.filter((match) => match._id !== matchId));
+  };
+
   return (
-    <MatchContext.Provider value={{ matches, addMatch }}>
+    <MatchContext.Provider value={{ matches, addMatch, removeMatch }}>
       {children}
     </MatchContext.Provider>
   );
