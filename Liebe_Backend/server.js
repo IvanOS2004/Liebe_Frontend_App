@@ -8,6 +8,8 @@ const cors = require("cors");
 const User = require("./models/User");
 const Match = require("./models/Match");
 const app = express();
+const Conversation = require("./models/Conversation");
+const Message = require("./models/Message");
 
 // Middleware
 app.use(cors());
@@ -220,6 +222,95 @@ app.get('/matches', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al obtener matches" });
+  }
+});
+
+// Obtener las conversaciones del usuario
+app.get("/conversations", async (req, res) => {
+  const { userId } = req.query;
+  try {
+    const conversations = await Conversation.find({
+      participants: userId,
+    }).populate("participants", "name photos"); // Ajusta los campos según necesites
+    res.status(200).json(conversations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Crear (o recuperar) una conversación entre dos usuarios
+app.post("/conversations", async (req, res) => {
+  const { user1, user2 } = req.body;
+  try {
+    // Verifica si ya existe una conversación entre ambos
+    let conversation = await Conversation.findOne({
+      participants: { $all: [user1, user2] },
+    });
+    if (!conversation) {
+      conversation = new Conversation({
+        participants: [user1, user2],
+      });
+      await conversation.save();
+    }
+    res.status(200).json(conversation);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Obtener mensajes de una conversación específica (ordenados por fecha)
+app.get("/messages/:conversationId", async (req, res) => {
+  const { conversationId } = req.params;
+  try {
+    const messages = await Message.find({ conversation: conversationId }).sort({ sentAt: 1 });
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Enviar un mensaje
+app.post("/messages", async (req, res) => {
+  const { conversationId, sender, receiver, message } = req.body;
+  try {
+    const newMessage = new Message({
+      conversation: conversationId,
+      sender,
+      receiver,
+      message,
+      status: "sent",
+    });
+    await newMessage.save();
+    // Actualizar la conversación con el último mensaje y la fecha de actualización
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: message,
+      updatedAt: Date.now(),
+    });
+    res.status(201).json(newMessage);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Actualizar el estado de un mensaje (por ejemplo, para marcarlo como leído)
+app.put("/messages/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status, receivedAt } = req.body;
+  try {
+    const updatedMessage = await Message.findByIdAndUpdate(
+      id,
+      {
+        status,
+        receivedAt: receivedAt || Date.now(),
+      },
+      { new: true }
+    );
+    if (!updatedMessage) {
+      return res.status(404).json({ message: "Mensaje no encontrado" });
+    }
+    res.status(200).json(updatedMessage);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

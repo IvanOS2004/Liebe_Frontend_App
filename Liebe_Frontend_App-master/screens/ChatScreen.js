@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,89 +11,68 @@ import {
 } from "react-native";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
+import { useChatContext } from "../context/ChatContext";
+import { useRegisterContext } from "../context/RegisterContext";
 
-const { height } = Dimensions.get("window"); // Obtiene la altura de la pantalla
-
-const chats = [
-  {
-    id: "1",
-    name: "Ana López",
-    message: "Hola, ¿cómo estás?",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-  },
-  {
-    id: "2",
-    name: "Carlos Pérez",
-    message: "¿Nos vemos mañana?",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-  },
-  {
-    id: "3",
-    name: "Sofía Gómez",
-    message: "¡Te mando la info ahora!",
-    avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-  },
-  {
-    id: "4",
-    name: "Juan Torres",
-    message: "Listo para el proyecto",
-    avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-  },
-  {
-    id: "5",
-    name: "María Sánchez",
-    message: "Nos vemos en la oficina",
-    avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-  },
-  {
-    id: "6",
-    name: "Luis Herrera",
-    message: "Ya revisé el documento",
-    avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-  },
-  {
-    id: "7",
-    name: "Pedro Ramírez",
-    message: "Confirmo la cita",
-    avatar: "https://randomuser.me/api/portraits/men/7.jpg",
-  },
-  {
-    id: "8",
-    name: "Elena Flores",
-    message: "Buen día!",
-    avatar: "https://randomuser.me/api/portraits/women/8.jpg",
-  },
-  {
-    id: "9",
-    name: "Fernando Ríos",
-    message: "Estoy en camino",
-    avatar: "https://randomuser.me/api/portraits/men/9.jpg",
-  },
-  {
-    id: "10",
-    name: "Natalia Vega",
-    message: "Nos vemos pronto",
-    avatar: "https://randomuser.me/api/portraits/women/10.jpg",
-  },
-];
-
-const NAVBAR_HEIGHT = 60; // Altura de CustomNavBar
-const BOTTOM_NAV_HEIGHT = 60; // Altura de BottomNavBar
-const MARGIN = 40; // Margen de 40 tanto arriba como abajo
+const { height } = Dimensions.get("window");
+const NAVBAR_HEIGHT = 60;
+const BOTTOM_NAV_HEIGHT = 60;
+const MARGIN = 40;
 
 const ChatScreen = ({ navigation }) => {
-  // Calculamos la altura disponible para el ScrollView
+  const { conversations, fetchConversations } = useChatContext();
+  const { registerData } = useRegisterContext();
+
+  useEffect(() => {
+    if (registerData?._id) {
+      fetchConversations(registerData._id);
+    }
+  }, [registerData]);
+
+  // Para cada conversación, determinamos el otro participante y mostramos el último mensaje.
+  const renderConversationItem = (conversation) => {
+    // Suponemos que 'participants' es un arreglo con los objetos de usuario
+    // y que el usuario actual es registerData._id.
+    const otherUser = conversation.participants.find(
+      (user) => user._id !== registerData._id
+    );
+    return (
+      <TouchableOpacity
+        key={conversation._id}
+        style={styles.chatItem}
+        onPress={() =>
+          navigation.navigate("ChatRoom", {
+            conversationId: conversation._id,
+            chatName: otherUser.name,
+            chatAvatar: otherUser.photos?.[0] || "https://via.placeholder.com/50",
+            userId: registerData._id,
+            otherUserId: otherUser._id,
+          })
+        }
+      >
+        <Image source={{ uri: otherUser.photos?.[0] || "https://via.placeholder.com/50" }} style={styles.avatar} />
+        <View style={styles.chatInfo}>
+          <Text style={styles.name}>{otherUser.name}</Text>
+          <Text style={styles.message} numberOfLines={1}>
+            {conversation.lastMessage || "Sin mensajes"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // Calculamos la altura para el contenedor de chats
   const scrollViewHeight =
     height - NAVBAR_HEIGHT - BOTTOM_NAV_HEIGHT - 2 * MARGIN;
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      {/* Navbar superior fija */}
+      {/* Navbar superior */}
       <View style={styles.topNavContainer}>
         <CustomNavBar />
       </View>
 
-      {/* Contenedor de chats con scroll */}
+      {/* Lista de conversaciones */}
       <View
         style={[
           styles.chatContainer,
@@ -108,28 +87,15 @@ const ChatScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {chats.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.chatItem}
-              onPress={() =>
-                navigation.navigate("ChatRoom", {
-                  chatId: item.id,
-                  chatName: item.name,
-                })
-              }
-            >
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              <View style={styles.chatInfo}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.message}>{item.message}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {conversations && conversations.length > 0 ? (
+            conversations.map(renderConversationItem)
+          ) : (
+            <Text style={styles.noChatsText}>No tienes conversaciones.</Text>
+          )}
         </ScrollView>
       </View>
 
-      {/* Navbar inferior fija */}
+      {/* Navbar inferior */}
       <View style={styles.bottomNavContainer}>
         <BottomNavBar navigation={navigation} />
       </View>
@@ -169,12 +135,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   chatContainer: {
-    width: "100%", // Ocupa todo el ancho
-    overflow: "hidden", // Corta el contenido que se desborda
+    width: "100%",
+    overflow: "hidden",
   },
   scrollContent: {
     paddingHorizontal: 10,
-    paddingBottom: 5, // Espaciado extra para evitar que el último mensaje se oculte
+    paddingBottom: 5,
   },
   chatItem: {
     flexDirection: "row",
@@ -205,6 +171,12 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 14,
     color: "#666",
+  },
+  noChatsText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#666",
+    fontSize: 16,
   },
 });
 

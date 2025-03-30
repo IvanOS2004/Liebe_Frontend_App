@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,47 +11,43 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // Para los íconos
+import { Ionicons } from "@expo/vector-icons";
+import { useChatContext } from "../context/ChatContext";
 
 const ChatRoomScreen = ({ navigation, route }) => {
-  // Obtener el nombre y el avatar del chat desde los parámetros de navegación
-  const { chatName, chatAvatar } = route.params;
-
-  // Estado para los mensajes
-  const [messages, setMessages] = useState([
-    { id: "1", text: "Hola, ¿cómo estás?", sender: "other" },
-    { id: "2", text: "¡Hola! Estoy bien, ¿y tú?", sender: "me" },
-    {
-      id: "3",
-      text: "Todo bien por aquí. ¿Qué planes tienes?",
-      sender: "other",
-    },
-  ]);
-
-  // Estado para el texto del mensaje
+  // Obtenemos los parámetros de la navegación
+  const { conversationId, chatName, chatAvatar, userId, otherUserId } = route.params;
+  const { messages, fetchMessages, sendMessage } = useChatContext();
   const [inputText, setInputText] = useState("");
 
-  // Función para enviar un mensaje
-  const sendMessage = () => {
+  // Referencia para el ScrollView (para auto-scroll)
+  const scrollViewRef = useRef();
+
+  useEffect(() => {
+    if (conversationId) {
+      fetchMessages(conversationId);
+    }
+  }, [conversationId]);
+
+  // Se actualiza cada vez que cambian los mensajes para auto-scroll
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages, conversationId]);
+
+  const handleSendMessage = () => {
     if (inputText.trim()) {
-      const newMessage = {
-        id: String(messages.length + 1),
-        text: inputText,
-        sender: "me",
-      };
-      setMessages([...messages, newMessage]);
+      sendMessage(conversationId, userId, otherUserId, inputText);
       setInputText("");
     }
   };
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      {/* Parte superior: Barra de perfil */}
+      {/* Barra superior */}
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Image source={{ uri: chatAvatar }} style={styles.profileAvatar} />
@@ -61,26 +57,23 @@ const ChatRoomScreen = ({ navigation, route }) => {
       {/* Área de mensajes */}
       <ScrollView
         contentContainerStyle={styles.messagesContainer}
-        ref={(ref) => (this.scrollView = ref)}
-        onContentSizeChange={() =>
-          this.scrollView.scrollToEnd({ animated: true })
-        }
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
       >
-        {messages.map((message) => (
+        {(messages[conversationId] || []).map((message) => (
           <View
-            key={message.id}
+            key={message._id}
             style={[
               styles.messageBubble,
-              message.sender === "me" ? styles.myMessage : styles.otherMessage,
+              message.sender === userId ? styles.myMessage : styles.otherMessage,
             ]}
           >
-            <Text style={styles.messageText}>{message.text}</Text>
+            <Text style={styles.messageText}>{message.message}</Text>
           </View>
         ))}
       </ScrollView>
 
-      {/* Parte inferior: Área de entrada de texto */}
+      {/* Entrada de mensaje */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.inputContainer}
@@ -91,7 +84,7 @@ const ChatRoomScreen = ({ navigation, route }) => {
           value={inputText}
           onChangeText={setInputText}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
           <Ionicons name="send" size={24} color="#E82561" />
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -105,12 +98,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE4CF",
   },
   topBar: {
-    width: "100%", // Ocupa todo el ancho
-    height: 80, // Altura fija para la barra de navegación
+    width: "100%",
+    height: 80,
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    justifyContent: "flex-start", // Alinea a la izquierda
     backgroundColor: "#E82561",
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
@@ -127,6 +119,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Oswald_400Regular",
     color: "#ffffff",
+    marginLeft: 10,
   },
   messagesContainer: {
     flexGrow: 1,
@@ -141,11 +134,11 @@ const styles = StyleSheet.create({
   },
   myMessage: {
     alignSelf: "flex-end",
-    backgroundColor: "#DCF8C6", // Color para mensajes enviados
+    backgroundColor: "#DCF8C6",
   },
   otherMessage: {
     alignSelf: "flex-start",
-    backgroundColor: "#EEE", // Color para mensajes recibidos
+    backgroundColor: "#EEE",
   },
   messageText: {
     fontSize: 16,

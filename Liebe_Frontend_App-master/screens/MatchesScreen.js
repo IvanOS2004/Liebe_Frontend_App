@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -70,7 +70,7 @@ const MatchesScreen = ({ navigation }) => {
     }
   };
 
-  // Abre el modal y guarda el match a eliminar
+  // Función para abrir el modal y guardar el match a eliminar
   const handleRemoveMatch = (matchId) => {
     console.log("handleRemoveMatch llamado con matchId:", matchId);
     setMatchToDelete(matchId);
@@ -88,7 +88,6 @@ const MatchesScreen = ({ navigation }) => {
 
       if (response.ok) {
         console.log("Match eliminado correctamente:", matchToDelete);
-        // Opcional: puedes mostrar otro modal o toast de éxito
         setMatches((prev) => prev.filter((m) => m._id !== matchToDelete));
       } else {
         const data = await response.json();
@@ -97,9 +96,37 @@ const MatchesScreen = ({ navigation }) => {
     } catch (error) {
       console.error("Error al intentar eliminar el match:", error);
     } finally {
-      // Cierra el modal y resetea el id a eliminar
       setModalVisible(false);
       setMatchToDelete(null);
+    }
+  };
+
+  // Función para iniciar la conversación al pulsar el icono de "heart"
+  const startChat = async (match) => {
+    // Determina el otro usuario
+    const otherUser =
+      match.user1._id === registerData._id ? match.user2 : match.user1;
+    try {
+      // Llama al endpoint para crear o recuperar la conversación
+      const response = await fetch("http://192.168.1.70:3000/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user1: registerData._id,
+          user2: otherUser._id,
+        }),
+      });
+      const conversation = await response.json();
+      // Navega a la pantalla de chat
+      navigation.navigate("ChatRoom", {
+        conversationId: conversation._id,
+        chatName: otherUser.name,
+        chatAvatar: otherUser.photos?.[0] || "https://via.placeholder.com/50",
+        userId: registerData._id,
+        otherUserId: otherUser._id,
+      });
+    } catch (err) {
+      console.error("Error iniciando la conversación:", err);
     }
   };
 
@@ -180,7 +207,10 @@ const MatchesScreen = ({ navigation }) => {
                     >
                       <Ionicons name="close" size={24} color="#FF5864" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionButton}>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => startChat(match)}
+                    >
                       <Ionicons name="heart" size={24} color="#4CAF50" />
                     </TouchableOpacity>
                   </View>
