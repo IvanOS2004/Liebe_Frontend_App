@@ -100,6 +100,23 @@ app.post('/check-match', async (req, res) => {
   }
 });
 
+app.delete("/matches/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const match = await Match.findByIdAndDelete(id);
+
+    if (!match) {
+      return res.status(404).json({ message: "Match no encontrado." });
+    }
+
+    res.status(200).json({ message: "Match eliminado correctamente." });
+  } catch (error) {
+    console.error("Error eliminando match:", error);
+    res.status(500).json({ message: "Error del servidor." });
+  }
+});
+
 // ENDPOINT: Actualizar perfil
 app.put("/update-profile", async (req, res) => {
   try {

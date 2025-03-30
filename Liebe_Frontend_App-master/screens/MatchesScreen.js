@@ -6,36 +6,34 @@ import {
   ScrollView,
   Image,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   TouchableOpacity,
+  Modal,
   Dimensions
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomNavBar from "../components/CustomNavBar";
 import BottomNavBar from "../components/BottomNavBar";
 import { useRegisterContext } from "../context/RegisterContext";
-// Importa el contexto donde tienes la función removeMatch
 import { useMatchContext } from "../context/MatchContext";
 
-
 const { height } = Dimensions.get("window");
-
-// Ajusta estos valores si deseas modificar tamaños/márgenes
 const NAVBAR_HEIGHT = 60;
 const BOTTOM_NAV_HEIGHT = 60;
 const MARGIN = 40;
 
 const MatchesScreen = ({ navigation }) => {
   const { registerData } = useRegisterContext();
-  // Obtenemos la función removeMatch desde el contexto
   const { removeMatch } = useMatchContext();
 
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados para el modal de confirmación
+  const [modalVisible, setModalVisible] = useState(false);
+  const [matchToDelete, setMatchToDelete] = useState(null);
 
-  // Calcula la altura disponible para el ScrollView (área central)
   const scrollViewHeight =
     height - NAVBAR_HEIGHT - BOTTOM_NAV_HEIGHT - 2 * MARGIN;
 
@@ -72,29 +70,49 @@ const MatchesScreen = ({ navigation }) => {
     }
   };
 
-  // Función para eliminar match (localmente y desde el contexto)
+  // Abre el modal y guarda el match a eliminar
   const handleRemoveMatch = (matchId) => {
-    // Llamamos a la función del contexto
-    removeMatch(matchId);
-    // Opcional: eliminamos también del estado local para refrescar la lista en pantalla
-    setMatches((prev) => prev.filter((m) => m._id !== matchId));
+    console.log("handleRemoveMatch llamado con matchId:", matchId);
+    setMatchToDelete(matchId);
+    setModalVisible(true);
+  };
+
+  const confirmRemoveMatch = async () => {
+    if (!matchToDelete) return;
+    try {
+      console.log("Intentando eliminar match con ID:", matchToDelete);
+      const response = await fetch(
+        `http://192.168.1.70:3000/matches/${matchToDelete}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        console.log("Match eliminado correctamente:", matchToDelete);
+        // Opcional: puedes mostrar otro modal o toast de éxito
+        setMatches((prev) => prev.filter((m) => m._id !== matchToDelete));
+      } else {
+        const data = await response.json();
+        console.error("Error del servidor al eliminar match:", data);
+      }
+    } catch (error) {
+      console.error("Error al intentar eliminar el match:", error);
+    } finally {
+      // Cierra el modal y resetea el id a eliminar
+      setModalVisible(false);
+      setMatchToDelete(null);
+    }
   };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.safeContainer}>
-        {/* Barra superior fija */}
         <View style={styles.topNavContainer}>
           <CustomNavBar />
         </View>
-
-        {/* Contenido centrado al cargar */}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#E82561" />
           <Text style={{ marginTop: 10, color: "#666" }}>Cargando...</Text>
         </View>
-
-        {/* Barra inferior fija */}
         <View style={styles.bottomNavContainer}>
           <BottomNavBar navigation={navigation} />
         </View>
@@ -105,20 +123,15 @@ const MatchesScreen = ({ navigation }) => {
   if (error) {
     return (
       <SafeAreaView style={styles.safeContainer}>
-        {/* Barra superior fija */}
         <View style={styles.topNavContainer}>
           <CustomNavBar />
         </View>
-
-        {/* Contenido centrado en caso de error */}
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchMatches}>
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Barra inferior fija */}
         <View style={styles.bottomNavContainer}>
           <BottomNavBar navigation={navigation} />
         </View>
@@ -128,12 +141,9 @@ const MatchesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      {/* Barra superior fija */}
       <View style={styles.topNavContainer}>
         <CustomNavBar />
       </View>
-
-      {/* Contenedor con scroll, ajustado en altura */}
       <View
         style={[
           styles.chatContainer,
@@ -150,27 +160,19 @@ const MatchesScreen = ({ navigation }) => {
         >
           {matches.length > 0 ? (
             matches.map((match) => {
-              // Verificamos que existan user1 y user2
               if (!match.user1 || !match.user2) return null;
-              // Determinamos el "otro" usuario
               const otherUser =
                 match.user1._id === registerData._id ? match.user2 : match.user1;
-              // Se usa la primera foto o un placeholder
-              const photo = otherUser.photos?.[0] || "https://via.placeholder.com/50";
-
+              const photo =
+                otherUser.photos?.[0] || "https://via.placeholder.com/50";
               return (
                 <View key={match._id} style={styles.profileItem}>
-                  {/* Avatar */}
                   <Image source={{ uri: photo }} style={styles.profileAvatar} />
-
-                  {/* Nombre y edad */}
                   <View style={styles.profileInfo}>
                     <Text style={styles.profileName}>
                       {otherUser.name}, {otherUser.age}
                     </Text>
                   </View>
-
-                  {/* Botones (X y Corazón) */}
                   <View style={styles.profileActions}>
                     <TouchableOpacity
                       style={styles.actionButton}
@@ -190,11 +192,47 @@ const MatchesScreen = ({ navigation }) => {
           )}
         </ScrollView>
       </View>
-
-      {/* Barra inferior fija */}
       <View style={styles.bottomNavContainer}>
         <BottomNavBar navigation={navigation} />
       </View>
+
+      {/* Modal de confirmación */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setMatchToDelete(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Confirmar eliminación</Text>
+            <Text style={styles.modalMessage}>
+              ¿Estás seguro de que deseas eliminar este match?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  console.log("Eliminación cancelada");
+                  setModalVisible(false);
+                  setMatchToDelete(null);
+                }}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteButton]}
+                onPress={confirmRemoveMatch}
+              >
+                <Text style={styles.modalButtonText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -209,7 +247,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 60,
+    height: NAVBAR_HEIGHT,
     backgroundColor: "#FFF",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -222,7 +260,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 60,
+    height: BOTTOM_NAV_HEIGHT,
     backgroundColor: "#FFF",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -251,7 +289,6 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     marginHorizontal: 10,
     borderRadius: 10,
-
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -284,7 +321,6 @@ const styles = StyleSheet.create({
     color: "#777",
     marginTop: 20,
   },
-  // Error
   errorText: {
     fontSize: 16,
     color: "#E82561",
@@ -299,6 +335,53 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   retryButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
+  // Estilos para el modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#E82561",
+  },
+  modalMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#aaa",
+  },
+  deleteButton: {
+    backgroundColor: "#E82561",
+  },
+  modalButtonText: {
     color: "#FFF",
     fontWeight: "bold",
   },
