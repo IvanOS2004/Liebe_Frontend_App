@@ -8,7 +8,7 @@ const getDevelopmentIP = () => {
   if (Platform.OS === 'ios') return 'localhost'; // iOS Simulator
   
   // 2. Para dispositivos físicos (cambia esta lógica según tu red)
-  const defaultIP = '192.168.1.70'; // IP de tu máquina en LAN
+  const defaultIP = '192.168.1.81'; // IP de tu máquina en LAN
   
   // 3. Detección automática de IP (experimental - requiere permiso de red)
   try {
